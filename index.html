@@ -1,0 +1,577 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lua Obfuscator</title>
+    <style>
+      /* Animations */
+
+      @keyframes popup {
+        0% {
+          transform: scale(0);
+        }
+
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      @keyframes idle {
+        0% {
+          transform: rotate(5deg);
+        }
+
+        100% {
+          transform: rotate(-5deg);
+        }
+      }
+
+      /* CSS */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        outline: none;
+        border: none;
+        text-decoration: none;
+      }
+
+      body {
+        display: flex;
+        font-family: Geneva, Verdana, sans-serif;
+        color: white;
+        height: 100vh;
+        background-color: #333;
+        justify-content: center;
+        align-items: center;
+      }
+
+      /* navbar */
+      .navbar {
+        display: flex;
+        height: 5rem;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1.4rem 5%;
+        background-color: rgba(68, 68, 68, 0.3);
+        border-bottom: 3px solid rgb(34, 34, 34, 0.5);
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 9999;
+        box-shadow: 0 0px 20px #252525;
+      }
+
+      .logo span {
+        color: rgb(255, 143, 16);
+        transition: 0.2s ease-in-out;
+      }
+
+      .logo {
+        display: flex;
+        transition: 0.2s ease-in-out;
+        animation: idle 3s ease-in-out infinite alternate;
+      }
+
+      .logo:hover {
+        color: rgb(255, 143, 16);
+        transition: 0.2s ease-in-out;
+      }
+      .logo:hover span {
+        color: rgb(255, 255, 255);
+        transition: 0.2s ease-in-out;
+      }
+
+      .nav a {
+        color: white;
+        display: inline-block;
+        font-size: 1rem;
+        margin: 0 1rem;
+        transition: 0.2s ease-in-out;
+        transform: scale(0.9);
+      }
+
+      .nav a:hover {
+        color: rgb(255, 255, 255, 0.7);
+        transform: scale(1.1);
+        transition: 0.2s ease-in-out;
+      }
+
+      .nav a::after {
+        content: "";
+        display: block;
+        padding-bottom: 0.5rem;
+        border-bottom: 0.1rem solid white;
+        transform: scaleX(0);
+        transition: 0.2s linear;
+      }
+
+      .nav a:hover::after {
+        transform: scaleX(1);
+      }
+
+      .nav a .t,
+      .account {
+        animation: popup 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) normal
+          calc(var(--order) * 100ms);
+      }
+
+      /* Profile */
+      .profile {
+        border-radius: 20px;
+        width: 2.5rem;
+        transition: 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 2.5rem;
+        background-image: url("./xeerazz.jpg");
+        background-size: cover;
+        background-repeat: no-repeat;
+        box-shadow: 0 0 12px#222;
+      }
+
+      .profile:hover {
+        border-radius: 13px;
+        border: 1.5px solid rgb(255, 255, 255, 1);
+        transform: scale(1.5);
+      }
+
+      .profile:active {
+        transform: scale(1.25);
+      }
+
+      /* Card Form */
+      form {
+        width: 75%;
+      }
+      .card {
+        display: block;
+        width: 100%;
+        position: relative;
+        background-color: rgba(68, 68, 68, 0.5);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        box-shadow: 0 0 42px#222;
+        animation: popup 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1 normal
+          forwards;
+      }
+
+      .card-header {
+        display: flex;
+        padding: 1rem;
+        justify-content: center;
+        align-items: center;
+        border-bottom: 2px solid rgb(255, 255, 255, 0.5);
+      }
+
+      .card-header h3 {
+        color: white;
+        transition: 0.5s;
+      }
+
+      .card-header h3:hover {
+        color: rgb(255, 143, 16);
+        transition: 0.5s;
+      }
+
+      .card-body {
+        padding: 1rem;
+      }
+
+      /* Uploading File */
+      .filescript {
+        margin-bottom: 1rem;
+      }
+
+      .filescript [type="file"] {
+        display: none;
+      }
+
+      .filescript label {
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: rgba(68, 68, 68, 0.5);
+        border-radius: 5px;
+        color: rgba(255, 255, 255, 0.9);
+        padding: 10px;
+        box-shadow: 0 0 10px #222;
+        transition: 0.2s ease-in-out;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+      }
+
+      .filescript #num-of-files {
+        display: flex;
+        position: relative;
+        margin-bottom: 1rem;
+      }
+
+      .filescript label:hover {
+        transform: scale(0.95);
+        border: 2px solid rgb(255, 143, 16);
+      }
+
+      .filescript label:focus,
+      .filescript label:valid,
+      .filescript label:active {
+        border: 2px solid rgb(255, 143, 16);
+        transform: scale(0.9);
+      }
+
+      /* Key Input */
+      .inputBox {
+        margin-bottom: 0.4rem;
+        position: relative;
+        width: 250px;
+      }
+
+      .inputBox input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        background: rgba(68, 68, 68, 0.5);
+        border-radius: 5px;
+        font-size: 1em;
+        color: white;
+        transition: 0.5s ease;
+      }
+
+      .inputBox span {
+        position: absolute;
+        left: 0;
+        padding: 10px;
+        font-size: 1em;
+        color: rgba(255, 255, 255, 0.25);
+        text-transform: uppercase;
+        transition: 0.5s ease;
+      }
+
+      .inputBox input:valid ~ span,
+      .inputBox input:focus ~ span {
+        color: rgb(255, 143, 16);
+        transform: translateX(10px) translateY(-7px);
+        font-size: 0.65em;
+        padding: 0 10px;
+        background: rgb(68, 68, 68);
+        border-left: 1px solid rgb(255, 143, 16);
+        border-right: 1px solid rgb(255, 143, 16);
+      }
+
+      .inputBox input:valid,
+      .inputBox input:focus {
+        border: 1px solid rgb(255, 143, 16);
+        background: rgb(68, 68, 68);
+      }
+
+      /* Button submit */
+      .card-body button {
+        display: block;
+        margin-top: 1rem;
+        text-transform: uppercase;
+        color: white;
+        font-weight: 500;
+        font-size: 1.3em;
+        position: relative;
+        background: rgba(255, 255, 255, 1);
+        padding: 15px 30px;
+        transition: 0.5s;
+      }
+
+      .card-body button:hover {
+        letter-spacing: 0.25em;
+        background: rgb(255, 157, 45);
+        color: rgb(255, 157, 45);
+        box-shadow: 0 0 15px rgba(255, 157, 45, 0.5);
+      }
+
+      .card-body button::before {
+        content: "";
+        position: absolute;
+        inset: 2px;
+        background: rgb(68, 68, 68);
+      }
+
+      .card-body button span {
+        position: relative;
+        z-index: 1;
+      }
+
+      .card-body button i {
+        position: absolute;
+        inset: 0;
+        display: block;
+      }
+
+      .card-body button i::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 75%;
+        border: 2px solid rgb(255, 143, 16);
+        width: 15px;
+        transform: translateY(-4px);
+        height: 8px;
+        background: rgb(68, 68, 68);
+        transition: 0.5s;
+      }
+
+      .card-body button:hover i::before {
+        transform: translateX(-50%) translateY(-4px);
+        border: 2px solid #fff;
+        width: 30px;
+        left: 20%;
+      }
+
+      .card-body button i::after {
+        content: "";
+        position: absolute;
+        border: 2px solid rgb(255, 143, 16);
+        bottom: 0;
+        left: 15%;
+        width: 15px;
+        height: 8px;
+        background: rgb(68, 68, 68);
+        transition: 0.5s;
+        transform: translateY(4px);
+      }
+
+      .card-body button:hover i::after {
+        transform: translateX(-50%) translateY(4px);
+        border: 2px solid #fff;
+        width: 30px;
+        left: 80%;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <h1 class="logo"><span>Yasu</span>scator</h1>
+
+      <div class="nav">
+        <a href="#"><div class="t" style="--order: 2">Obfuscator</div></a>
+      </div>
+      <div class="account" style="--order: 4">
+        <div class="profile"></div>
+      </div>
+    </nav>
+
+    <!-- Card -->
+    <form id="form">
+      <div class="card">
+        <div class="card-header">
+          <h3>Obfuscator</h3>
+        </div>
+        <div class="card-body">
+          <div class="filescript">
+            <h3>Upload Your File Here!</h3>
+            <input type="file" id="file" />
+            <label for="file">Select Script</label>
+            <div id="num-of-files">No File Choosen</div>
+            <h5>Only receive .lua or .txt file!</h5>
+          </div>
+          <div class="inputBox">
+            <input type="text" required id="key" />
+            <span>Encrypt Key</span>
+          </div>
+          <h5>For encrypt and decrypt script.</h5>
+          <button type="submit" id="obfuscate">
+            <span>Obfuscate</span><i></i>
+          </button>
+        </div>
+      </div>
+    </form>
+    <script>
+      // declare realkey variable
+      let realKey = "";
+
+      // random chars length
+      let leng = 128;
+      // key integer length xor loop
+      let k = 0;
+
+      // characters
+      const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+      // characters table
+      let abcTab = [];
+
+      // inserting chars
+      for (let i = 0; i < abc.length; i++) {
+        abcTab[i] = abc[i];
+      }
+
+      // ran{m string
+      let ran1 = "";
+      let ran2 = "";
+      let ran3 = "";
+      let ran4 = "";
+      let ran5 = "";
+      let ran6 = "";
+      for (let i = 0; i < leng; i++) {
+        ran1 += abcTab[Math.floor(Math.random() * abcTab.length)];
+        ran2 += abcTab[Math.floor(Math.random() * abcTab.length)];
+        ran3 += abcTab[Math.floor(Math.random() * abcTab.length)];
+        ran4 += abcTab[Math.floor(Math.random() * abcTab.length)];
+        ran5 += abcTab[Math.floor(Math.random() * abcTab.length)];
+        ran6 += abcTab[Math.floor(Math.random() * abcTab.length)];
+      }
+
+      // function encrypt xor
+      const xorE = (sc, key) => {
+        const tabel = [];
+        let k = 0;
+        for (let i = 0; i < sc.length; i++) {
+          let byteValue = sc.charCodeAt(i) + key.charCodeAt(k);
+          k++;
+          tabel.push(byteValue);
+          if (k == key.length) {
+            k = 0;
+          }
+        }
+        return tabel;
+      };
+
+      const xorE2 = (sc, key) => {
+        let tabel = [];
+        for (let i = 0; i < sc.length; i++) {
+          k += 1;
+          let byte = sc.charCodeAt(i) + key.charCodeAt(k);
+          tabel.push(byte);
+          if (k == key.length) {
+            k = 0;
+          }
+        }
+        k = 0;
+        return tabel;
+      };
+
+      // function decrypt xor for testing
+      const xorD = (tabel) => {
+        let hasil = "";
+        for (const v of tabel) {
+          k = k + 1;
+          hasil = hasil + String.fromCharCode(v - key.charCodeAt(k));
+          if (k == key.length) {
+            k = 0;
+          }
+        }
+        return hasil;
+      };
+
+      // declare tabel alibi
+      let tab1 = [];
+      let tab2 = [];
+      let tab3 = [];
+      let tab4 = [];
+      let tab5 = [];
+      let tab6 = [];
+
+      for (let i = 0; i < leng; i++) {
+        // tab1[i] = string.byte(abcTab[math.ranm(1, #abcTab)]
+        tab1[i] =
+          abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
+        tab2[i] =
+          abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
+        tab3[i] =
+          abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
+        tab4[i] =
+          abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
+        tab5[i] =
+          abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
+        tab6[i] =
+          abcTab[Math.floor(Math.random() * abcTab.length)].charCodeAt(0);
+      }
+
+      tab1 = tab1.join();
+      tab2 = tab2.join();
+      tab3 = tab3.join();
+      tab4 = tab4.join();
+      tab5 = tab5.join();
+      tab6 = tab6.join();
+
+      // function alibi alias pengalhan
+      // @param var1 key
+      // @param var2 string
+      // @param var3 variable
+      // @param tablenya table
+      const alibi = (var1, var2, var3, tablenya) => {
+        return `_ENV={string=string,table=table,math=math,pairs=pairs,load=load,print=print};${var1}="${var2}";${var2}="${var1}";${var3}={${tablenya}};function xor(t)local ciphertext="";for i=1,#${var2} do local byte=string.byte(${var2}, i);local quibit=string.byte(${var1},(i-1)%#${var1}+1);ciphertext=ciphertext..string.char(bit.bxor(byte,quibit));end;return ciphertext;end;bit={bxor=function(a,b)local r,m=0,1;while a>0 and b>0 do local aa,bb=a%2,b%2;r=r+m*((aa+bb)%2);m=m*2;a=math.floor(a/2);b=math.floor(b/2) end;if a>0 then r=r+m*a end;if b>0 then r=r+m*b end;return r;end};xor(${var3})${ran1}z="Encrypt By Yasu";`;
+      };
+
+      // @return function decrypt real
+      const decX = (tabel) => {
+        // ran3
+        let script = ran3;
+        // ran4
+        let keyleng = ran4;
+        // ran1
+        let l = ran1;
+        // ran2
+        let v = ran2;
+        // ran5
+        let hasil = ran5;
+        return `${script}={${tabel.join()}};${keyleng}=0;${hasil}='';for ${l},${v} in pairs(${script}) do ${keyleng}=${keyleng}+1;${hasil}=${hasil}.._ENV["\\115\\116\\114\\105\\110\\103"]["\\99\\104\\97\\114"](${v}-_ENV["\\115\\116\\114\\105\\110\\103"]["\\98\\121\\116\\101"]("${realKey}",${keyleng}));if ${keyleng}==#"${realKey}" then ${keyleng}=0;end;end;if ${ran1}z=="\\69\\110\\99\\114\\121\\112\\116\\32\\66\\121\\32\\89\\97\\115\\117" then _ENV["\\108\\111\\97\\100"](${hasil})() else print("Error whle runing this code");end;`;
+      };
+
+      // @return Gabungan semuanya
+      // Output = templateE + alibi(ran1,ran2,ran3,tab1) + decX(xorE())
+      // console.log(Output)
+
+      const fileInput = document.getElementById("file");
+      const fileChoosen = document.getElementById("num-of-files");
+      const read = new FileReader();
+      const form = document.getElementById("form");
+      console.log(form);
+
+      fileInput.addEventListener("change", () => {
+        let fileName = fileInput.files[0].name;
+        let fileSize = (fileInput.files[0].size / 1024).toFixed(2);
+        if (fileName.endsWith(".lua") || fileName.endsWith(".txt")) {
+          fileChoosen.innerHTML = `${fileName} (${fileSize}Kb)`;
+        } else {
+          fileChoosen.innerHTML = `Please upload only lua file or txt file!`;
+        }
+      });
+
+      form.addEventListener("submit", (event) => {
+        console.log("Encrypting..");
+        let file = document.getElementById("file").files[0];
+        if (file == null) alert("Please upload file first!");
+        let keys = document.getElementById("key").value;
+        console.log(keys);
+        for (let i = 0; i < keys.length; i++) {
+          realKey += "\\" + keys.charCodeAt(i);
+        }
+        read.readAsText(file);
+        read.onload = () => {
+          const sc = read.result;
+          const templateE = `local key=[[${keys}]];${ran1}z="Encrypt By Yasu";${ran2}=${ran1};${ran3}=${ran2};${ran4}=${ran3};${ran5}=${ran4};${ran6}=${ran5};`;
+          const Output =
+            templateE +
+            alibi(ran1, ran2, ran3, tab1) +
+            alibi(ran4, ran2, ran5, tab2) +
+            alibi(ran6, ran3, ran1, tab3) +
+            decX(xorE(sc, keys)) +
+            alibi(ran2, ran4, ran6, tab4) +
+            alibi(ran1, ran4, ran5, tab5) +
+            alibi(ran2, ran1, ran3, tab6);
+          let blob = new Blob([Output], { type: "octet-stream" });
+          const href = URL.createObjectURL(blob);
+          const a = Object.assign(document.createElement("a"), {
+            href,
+            style: "display:none",
+            download: `Encrypted_${file.name}`,
+          });
+          a.click();
+          console.log("Downloading..");
+          URL.revokeObjectURL(href);
+          a.remove();
+        };
+      });
+    </script>
+  </body>
+</html>
